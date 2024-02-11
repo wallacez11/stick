@@ -16,7 +16,9 @@
               class="sticky-note paper-shadow"
               v-model="comment.content"
               :style="{ backgroundColor: comment.color }"
-              @input="handleInput(pageIndex, commentIndex)"
+              @input="handleInput(comment)"
+              :readonly="comment.readonly"
+              :maxlength="maxlength"
             ></textarea>
             <button
               class="btn btn-dark rounded-circle send"
@@ -24,7 +26,9 @@
               data-placement="bottom"
               title="save"
               v-show="
-                comment.content.length <= 145 && comment.content.length > 0
+                comment.content.length <= 145 &&
+                comment.content.length > 0 &&
+                !comment.readonly
               "
             >
               ✓
@@ -60,6 +64,8 @@ export default {
 
   data() {
     return {
+      maxlength: 145,
+      editable: true,
       currentPage: 0,
       pages: [[]],
       newPostItText: "",
@@ -82,6 +88,7 @@ export default {
           id: i + 1,
           content: `Comment ${i + 1}`,
           color: this.colors[i % this.colors.length],
+          readonly: true,
         });
       }
 
@@ -113,10 +120,11 @@ export default {
         lastCarouselItem.scrollIntoView({ behavior: "smooth" });
       }
     },
-    handleInput(index) {
-      if (this.postIts[index].content.length >= 145) {
-        this.postIts[index].content = this.postIts[index].content.slice(0, 145);
-      }
+    handleInput(comment) {
+      console.log("teste", comment.content.length);
+      // if (comment.content.length >= 145) {
+      //   comment.content = comment.slice(0, 145);
+      // }
     },
   },
 
@@ -127,7 +135,7 @@ export default {
 
       const lastPage = this.pages.length - 1;
 
-      if (this.pages[lastPage].length >= 40) {
+      if (this.pages[lastPage].length >= 5) {
         this.currentPage++;
         this.pages.push([
           { content: "This is a sticky note!", color: "#ffff99" },
@@ -136,6 +144,7 @@ export default {
         this.pages[lastPage].push({
           content: "This is a sticky note!",
           color: "#ffff99",
+          readonly: false,
         });
       }
     });
