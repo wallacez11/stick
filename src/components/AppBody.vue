@@ -1,30 +1,31 @@
 <template>
   <div>
-    <div id="carousel" class="carousel slide" data-bs-ride="carousel">
-      <div class="carousel-inner">
+    <div id="carousel" class="carousel slide" data-bs-interval="false">
+      <div ref="carouselInner" class="carousel-inner">
         <div
           v-for="(page, pageIndex) in pages"
           :key="pageIndex"
-          ref="carrousel"
-          :class="{ 'carousel-item': true, active: pageIndex === 0 }"
+          :class="{ 'carousel-item': true, active: pageIndex === currentPage }"
         >
           <div
-            v-for="(note, noteIndex) in page"
-            :key="noteIndex"
+            v-for="(comment, commentIndex) in page"
+            :key="commentIndex"
             class="textContainer"
           >
             <textarea
               class="sticky-note paper-shadow"
-              v-model="note.content"
-              :style="{ backgroundColor: note.color }"
-              @input="handleInput(pageIndex, noteIndex)"
+              v-model="comment.content"
+              :style="{ backgroundColor: comment.color }"
+              @input="handleInput(pageIndex, commentIndex)"
             ></textarea>
             <button
               class="btn btn-dark rounded-circle send"
               data-toggle="tooltip"
               data-placement="bottom"
               title="save"
-              v-show="note.content.length <= 145 && note.content.length > 0"
+              v-show="
+                comment.content.length <= 145 && comment.content.length > 0
+              "
             >
               ✓
             </button>
@@ -59,54 +60,83 @@ export default {
 
   data() {
     return {
-      height: 0,
-      width: 0,
+      currentPage: 0,
       pages: [[]],
       newPostItText: "",
       colors: ["#ffd699", "#ffcccc", "#ccffcc", "#ccccff", "#ffffcc"],
+      isSizeBelowThreshold: true,
     };
   },
-  created() {
-    window.addEventListener("resize", this.handleResize);
-  },
-  unmounted() {
-    window.removeEventListener("resize", this.handleResize);
-  },
+
   methods: {
+    loadComments() {
+      const totalComments = 1000;
+      const commentsPerPage = 40;
+
+      const totalPages = Math.ceil(totalComments / commentsPerPage);
+
+      const comments = [];
+
+      for (let i = 0; i < totalComments; i++) {
+        comments.push({
+          id: i + 1,
+          content: `Comment ${i + 1}`,
+          color: this.colors[i % this.colors.length],
+        });
+      }
+
+      this.pages = [];
+
+      for (let page = 0; page < totalPages; page++) {
+        const startIndex = page * commentsPerPage;
+        const endIndex = startIndex + commentsPerPage;
+        this.pages.push(comments.slice(startIndex, endIndex));
+      }
+      this.currentPage = this.pages.length - 1;
+    },
+    jumpToLastCarousel() {
+      console.log("Jumping to last carousel");
+
+      const carouselItems = document.querySelectorAll(
+        ".carousel-inner .carousel-item"
+      );
+
+      if (carouselItems.length > 0) {
+        carouselItems.forEach((item) => {
+          item.classList.remove("active");
+        });
+        carouselItems[carouselItems.length - 1].classList.add("active");
+      }
+
+      const lastCarouselItem = carouselItems[carouselItems.length - 1];
+      if (lastCarouselItem) {
+        lastCarouselItem.scrollIntoView({ behavior: "smooth" });
+      }
+    },
     handleInput(index) {
       if (this.postIts[index].content.length >= 145) {
         this.postIts[index].content = this.postIts[index].content.slice(0, 145);
       }
     },
-    reachBottom() {
-      console.log(this.$refs?.carrousel);
-      if (this.$refs?.carrousel) {
-        let containerHeight = this.$refs?.carrousel?.clientHeight;
-        let screenHeight =
-          window?.innerHeight || document?.documentElement.clientHeight;
-        let threshold = 0.8;
-        return console.log(containerHeight > screenHeight * threshold);
-      }
-      return false;
-    },
   },
+
   mounted() {
+    this.loadComments();
     this.emitter.on("createPost", () => {
+      this.jumpToLastCarousel();
+
       const lastPage = this.pages.length - 1;
-      console.log(this.reachBottom());
-      if (!this.reachBottom()) {
-        // Max 9 notes per page
+
+      if (this.pages[lastPage].length >= 40) {
+        this.currentPage++;
+        this.pages.push([
+          { content: "This is a sticky note!", color: "#ffff99" },
+        ]);
+      } else {
         this.pages[lastPage].push({
           content: "This is a sticky note!",
           color: "#ffff99",
         });
-      } else {
-        this.pages.push([
-          {
-            content: "This is a sticky note!",
-            color: "#ffff99",
-          },
-        ]);
       }
     });
   },
