@@ -2,6 +2,9 @@
   <nav class="navbar sticky-top navbar-expand-lg navbar-dark navigation">
     <div class="container">
       <a class="navbar-brand" href="">Post It</a>
+      <div class="navbar-text text-center">
+        {{ currentPosition }} / {{ totalPages }}
+      </div>
       <button
         type="button"
         @click="createPostIt()"
@@ -23,6 +26,12 @@ export default {
   props: {
     msg: String,
   },
+  data() {
+    return {
+      currentPosition: 0,
+      totalPages: 0,
+    };
+  },
   methods: {
     handleInput(index) {
       if (this.postIts[index].content.length >= 160) {
@@ -32,6 +41,13 @@ export default {
     createPostIt() {
       this.emitter.emit("createPost");
     },
+  },
+
+  mounted() {
+    this.emitter.on("controlValues", (evt) => {
+      this.currentPosition = evt.current;
+      this.totalPages = evt.total;
+    });
   },
 };
 </script>
@@ -51,5 +67,10 @@ a {
   background-color: black;
   font-weight: bold !important;
   font-weight: 900;
+}
+.navbar-text {
+  color: black;
+  font-weight: bold;
+  font-size: 18px;
 }
 </style>

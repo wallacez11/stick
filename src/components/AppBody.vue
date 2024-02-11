@@ -4,6 +4,7 @@
       <div ref="carouselInner" class="carousel-inner">
         <div
           v-for="(page, pageIndex) in pages"
+          :position="page"
           :key="pageIndex"
           :class="{ 'carousel-item': true, active: pageIndex === currentPage }"
         >
@@ -64,6 +65,7 @@ export default {
 
   data() {
     return {
+      position: 0,
       maxlength: 145,
       editable: true,
       currentPage: 0,
@@ -75,6 +77,22 @@ export default {
   },
 
   methods: {
+    handleCarouselSlide() {
+      console.log("bateu");
+      const activeItem = document.querySelector(
+        ".carousel-inner .carousel-item.active"
+      );
+      const carouselItems = Array.from(
+        document.querySelectorAll(".carousel-inner .carousel-item")
+      );
+      const currentIndex = carouselItems.indexOf(activeItem);
+      console.log(this.pages.length);
+
+      this.emitter.emit("controlValues", {
+        current: currentIndex + 1,
+        total: this.pages.length,
+      });
+    },
     loadComments() {
       const totalComments = 1000;
       const commentsPerPage = 40;
@@ -102,8 +120,6 @@ export default {
       this.currentPage = this.pages.length - 1;
     },
     jumpToLastCarousel() {
-      console.log("Jumping to last carousel");
-
       const carouselItems = document.querySelectorAll(
         ".carousel-inner .carousel-item"
       );
@@ -120,15 +136,14 @@ export default {
         lastCarouselItem.scrollIntoView({ behavior: "smooth" });
       }
     },
-    handleInput(comment) {
-      console.log("teste", comment.content.length);
-      // if (comment.content.length >= 145) {
-      //   comment.content = comment.slice(0, 145);
-      // }
-    },
   },
-
+  beforeUnmount() {
+    const carousel = document.getElementById("carousel");
+    carousel.removeEventListener("slid.bs.carousel", this.handleCarouselSlide);
+  },
   mounted() {
+    const carousel = document.getElementById("carousel");
+    carousel.addEventListener("slid.bs.carousel", this.handleCarouselSlide);
     this.loadComments();
     this.emitter.on("createPost", () => {
       this.jumpToLastCarousel();
