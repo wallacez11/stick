@@ -229,24 +229,11 @@ textarea {
   flex: 0 0 auto; /* Prevent sticky notes from growing */
 }
 
-.paper-shadow:after,
 .paper-shadow:before {
   display: flex;
   flex-wrap: wrap; /* Allow items to wrap to the next line */
   justify-content: center; /* Center horizontally */
   margin-top: 50px; /* Add margin-top */
-}
-
-.paper-shadow:after {
-  width: 90%;
-  height: 10px;
-  top: 30px;
-
-  transform: rotate(-3deg);
-  box-shadow: 0px -25px 35px 0px rgba(0, 0, 0, 0.5);
-}
-
-.paper-shadow:before {
   width: 10px;
   height: 95%;
   top: 5px;
@@ -255,11 +242,18 @@ textarea {
   box-shadow: 22px 0px 35px 0px rgba(0, 0, 0, 0.5);
 }
 
+.paper-shadow:after {
+  width: 90%;
+  height: 10px;
+  top: 30px;
+  transform: rotate(-3deg);
+  box-shadow: 0px -25px 35px 0px rgba(0, 0, 0, 0.5);
+}
+
 .sticky-note {
   background-color: #ffc500 !important;
   padding: 20px;
 
-  cursor: move;
   flex: 0 0 calc(15.3333% - 20px); /* Adjust width here */
   margin: 10px; /* Add margin between sticky notes */
   height: 200px; /* Adjust height as needed */
