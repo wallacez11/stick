@@ -26,12 +26,12 @@
                 :maxlength="maxlength"
               ></textarea>
               <button
-                class="btn btn-dark rounded-circle send"
+                class="btn-sm btn-dark rounded-circle send"
                 data-toggle="tooltip"
                 data-placement="bottom"
                 title="save"
                 v-show="
-                  comment.content.length <= 145 &&
+                  comment.content.length <= maxlength &&
                   comment.content.length > 0 &&
                   !comment.readonly
                 "
@@ -71,7 +71,7 @@ export default {
   data() {
     return {
       position: 0,
-      maxlength: 145,
+      maxlength: 110,
       editable: true,
       currentPage: 0,
       pages: [[]],
@@ -200,7 +200,7 @@ export default {
 }
 .send {
   position: absolute;
-  bottom: 12%;
+  bottom: 5%;
   left: 80%;
   color: white;
   box-shadow: 0px 10px 50px rgba(0, 0, 0, 0.3);
@@ -218,6 +218,9 @@ textarea {
   resize: none !important;
   outline: none !important;
   overflow: hidden;
+  width: 100%; /* Adjust width to fill the available space, considering padding */
+  height: 100%; /* Adjust height to fill the available space, considering padding */
+  margin: 0;
 }
 .paper-shadow {
   position: relative;
@@ -254,7 +257,7 @@ textarea {
   background-color: #ffc500 !important;
   padding: 20px;
 
-  flex: 0 0 calc(15.3333% - 20px); /* Adjust width here */
+  flex: 0 0 calc(20% - 20px); /* Adjust width here */
   margin: 10px; /* Add margin between sticky notes */
   height: 200px; /* Adjust height as needed */
   box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
