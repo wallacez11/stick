@@ -1,39 +1,44 @@
 <template>
   <div>
-    <div id="carousel" class="carousel slide" data-bs-interval="false">
-      <div ref="carouselInner" class="carousel-inner">
+    <div
+      id="carousel"
+      class="carousel slide sticky-notes-container"
+      data-bs-interval="false"
+    >
+      <div ref="carouselInner" class="carousel-inner container">
         <div
           v-for="(page, pageIndex) in pages"
           :position="page"
           :key="pageIndex"
           :class="{ 'carousel-item': true, active: pageIndex === currentPage }"
+          class=""
         >
-          <div
-            v-for="(comment, commentIndex) in page"
-            :key="commentIndex"
-            class="textContainer"
-          >
-            <textarea
+          <div class="textContainer">
+            <div
+              v-for="(comment, commentIndex) in page"
+              :key="commentIndex"
               class="sticky-note paper-shadow"
-              v-model="comment.content"
-              :style="{ backgroundColor: comment.color }"
-              @input="handleInput(comment)"
-              :readonly="comment.readonly"
-              :maxlength="maxlength"
-            ></textarea>
-            <button
-              class="btn btn-dark rounded-circle send"
-              data-toggle="tooltip"
-              data-placement="bottom"
-              title="save"
-              v-show="
-                comment.content.length <= 145 &&
-                comment.content.length > 0 &&
-                !comment.readonly
-              "
             >
-              ✓
-            </button>
+              <textarea
+                v-model="comment.content"
+                :style="{ backgroundColor: comment.color }"
+                :readonly="comment.readonly"
+                :maxlength="maxlength"
+              ></textarea>
+              <button
+                class="btn btn-dark rounded-circle send"
+                data-toggle="tooltip"
+                data-placement="bottom"
+                title="save"
+                v-show="
+                  comment.content.length <= 145 &&
+                  comment.content.length > 0 &&
+                  !comment.readonly
+                "
+              >
+                ✓
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -78,7 +83,6 @@ export default {
 
   methods: {
     handleCarouselSlide() {
-      console.log("bateu");
       const activeItem = document.querySelector(
         ".carousel-inner .carousel-item.active"
       );
@@ -147,13 +151,17 @@ export default {
     this.loadComments();
     this.emitter.on("createPost", () => {
       this.jumpToLastCarousel();
-
+      this.handleCarouselSlide();
       const lastPage = this.pages.length - 1;
 
-      if (this.pages[lastPage].length >= 5) {
+      if (this.pages[lastPage].length >= 40) {
         this.currentPage++;
         this.pages.push([
-          { content: "This is a sticky note!", color: "#ffff99" },
+          {
+            content: "This is a sticky note!",
+            color: "#ffff99",
+            readonly: false,
+          },
         ]);
       } else {
         this.pages[lastPage].push({
@@ -199,17 +207,11 @@ export default {
   background-color: black;
 }
 .textContainer {
-  display: inline-block;
-
-  position: relative !important;
-  box-sizing: border-box !important;
-}
-.postContainer {
+  margin-left: 30px;
   display: flex;
-  flex-wrap: wrap; /* Allow items to wrap to the next line */
-  max-width: 100%;
-  overflow-x: hidden;
+  flex-wrap: wrap;
 }
+
 textarea {
   border: none !important;
   background-color: transparent !important;
@@ -221,12 +223,9 @@ textarea {
   position: relative;
   background: #fff;
   width: 300px;
-  /* Adjust the width of the sticky note */
   height: 200px;
-  /* Adjust the height of the sticky note */
   margin: 10px; /* Add margin between sticky notes */
   box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3); /* Enhance sticky note shadow */
-  border-radius: 10px;
   flex: 0 0 auto; /* Prevent sticky notes from growing */
 }
 
@@ -242,7 +241,7 @@ textarea {
   width: 90%;
   height: 10px;
   top: 30px;
-  right: 8px;
+
   transform: rotate(-3deg);
   box-shadow: 0px -25px 35px 0px rgba(0, 0, 0, 0.5);
 }
@@ -259,7 +258,17 @@ textarea {
 .sticky-note {
   background-color: #ffc500 !important;
   padding: 20px;
-  border-radius: 5px;
+
   cursor: move;
+  flex: 0 0 calc(15.3333% - 20px); /* Adjust width here */
+  margin: 10px; /* Add margin between sticky notes */
+  height: 200px; /* Adjust height as needed */
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+  .sticky-note {
+    flex: 0 0 calc(50% - 20px); /* Adjust width for smaller screens */
+  }
 }
 </style>
