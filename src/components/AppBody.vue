@@ -99,7 +99,7 @@ export default {
     },
     loadComments() {
       const totalComments = 1000;
-      const commentsPerPage = 40;
+      const commentsPerPage = 5;
 
       const totalPages = Math.ceil(totalComments / commentsPerPage);
 
@@ -121,7 +121,7 @@ export default {
         const endIndex = startIndex + commentsPerPage;
         this.pages.push(comments.slice(startIndex, endIndex));
       }
-      this.currentPage = this.pages.length - 1;
+      this.currentPage = 0;
     },
     jumpToLastCarousel() {
       const carouselItems = document.querySelectorAll(
@@ -149,12 +149,14 @@ export default {
     const carousel = document.getElementById("carousel");
     carousel.addEventListener("slid.bs.carousel", this.handleCarouselSlide);
     this.loadComments();
+    this.jumpToLastCarousel();
+    this.handleCarouselSlide();
     this.emitter.on("createPost", () => {
       this.jumpToLastCarousel();
       this.handleCarouselSlide();
       const lastPage = this.pages.length - 1;
 
-      if (this.pages[lastPage].length >= 40) {
+      if (this.pages[lastPage].length >= 5) {
         this.currentPage++;
         this.pages.push([
           {
@@ -170,6 +172,10 @@ export default {
           readonly: false,
         });
       }
+      this.$nextTick(() => {
+        this.jumpToLastCarousel();
+        this.handleCarouselSlide();
+      });
     });
   },
 };
