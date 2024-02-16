@@ -207,7 +207,6 @@ export default {
   background-color: black;
 }
 .textContainer {
-  margin-left: 30px;
   display: flex;
   flex-wrap: wrap;
 }
