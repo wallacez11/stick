@@ -28,8 +28,10 @@ export default {
   },
   data() {
     return {
+      createPostItClickCount: 0,
       currentPosition: 0,
       totalPages: 0,
+      isFirstTime: true,
     };
   },
   methods: {
@@ -39,7 +41,13 @@ export default {
       }
     },
     createPostIt() {
-      this.emitter.emit("createPost");
+      this.createPostItClickCount++;
+      if (this.isFirstTime || this.createPostItClickCount % 10 === 0) {
+        this.emitter.emit("createPost", true);
+      } else {
+        this.emitter.emit("createPost", false);
+      }
+      this.isFirstTime = false;
     },
   },
 

@@ -1,6 +1,41 @@
 <template>
   <div>
     <div
+      class="modal fade"
+      ref="exampleModal"
+      id="exampleModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">
+              We don't like bots, are you a bot?
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              @click="modal.hide()"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <vue-recaptcha
+              ref="recaptcha"
+              @verify="onRecaptchaVerified"
+              :sitekey="recaptchaSiteKey"
+            ></vue-recaptcha>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
       id="carousel"
       class="carousel slide sticky-notes-container"
       data-bs-interval="false"
@@ -65,11 +100,19 @@
 </template>
 
 <script>
+import { VueRecaptcha } from "vue-recaptcha";
+import { Modal } from "bootstrap";
+
 export default {
   name: "AppBody",
-
+  components: {
+    VueRecaptcha,
+  },
   data() {
     return {
+      counter: 0,
+      modal: null,
+      successfullCaptcha: false,
       position: 0,
       maxlength: 110,
       editable: true,
@@ -77,7 +120,7 @@ export default {
       pages: [[]],
       newPostItText: "",
       colors: ["#ffd699", "#ffcccc", "#ccffcc", "#ccccff", "#ffffcc"],
-      isSizeBelowThreshold: true,
+      recaptchaSiteKey: process.env.VUE_APP_CAPTCHA_SITE,
     };
   },
 
@@ -123,6 +166,14 @@ export default {
       }
       this.currentPage = 0;
     },
+    onRecaptchaVerified(response) {
+      if (response) {
+        this.successfullCaptcha = true;
+        this.modal.hide();
+      } else {
+        this.successfullCaptcha = false;
+      }
+    },
     jumpToLastCarousel() {
       const carouselItems = document.querySelectorAll(
         ".carousel-inner .carousel-item"
@@ -140,38 +191,52 @@ export default {
         lastCarouselItem.scrollIntoView({ behavior: "smooth" });
       }
     },
+    carouselListener() {
+      const carousel = document.getElementById("carousel");
+      carousel.addEventListener("slid.bs.carousel", this.handleCarouselSlide);
+    },
+    handleCaptchaVerification(value) {
+      if (value || !this.successfullCaptcha) {
+        this.$refs.recaptcha.reset();
+        this.modal.show();
+      }
+    },
   },
   beforeUnmount() {
     const carousel = document.getElementById("carousel");
     carousel.removeEventListener("slid.bs.carousel", this.handleCarouselSlide);
   },
   mounted() {
-    const carousel = document.getElementById("carousel");
-    carousel.addEventListener("slid.bs.carousel", this.handleCarouselSlide);
+    console.log("teste", process.env.VUE_APP_CAPTCHA_SITE);
+    this.modal = new Modal(this.$refs.exampleModal);
+    this.carouselListener();
     this.loadComments();
     this.jumpToLastCarousel();
     this.handleCarouselSlide();
-    this.emitter.on("createPost", () => {
+    this.emitter.on("createPost", (value) => {
+      this.handleCaptchaVerification(value);
       this.jumpToLastCarousel();
       this.handleCarouselSlide();
       const lastPage = this.pages.length - 1;
-
-      if (this.pages[lastPage].length >= 5) {
-        this.currentPage++;
-        this.pages.push([
-          {
+      if (this.successfullCaptcha) {
+        if (this.pages[lastPage].length >= 5) {
+          this.currentPage++;
+          this.pages.push([
+            {
+              content: "This is a sticky note!",
+              color: "#ffff99",
+              readonly: false,
+            },
+          ]);
+        } else {
+          this.pages[lastPage].push({
             content: "This is a sticky note!",
             color: "#ffff99",
             readonly: false,
-          },
-        ]);
-      } else {
-        this.pages[lastPage].push({
-          content: "This is a sticky note!",
-          color: "#ffff99",
-          readonly: false,
-        });
+          });
+        }
       }
+
       this.$nextTick(() => {
         this.jumpToLastCarousel();
         this.handleCarouselSlide();
