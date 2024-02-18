@@ -114,6 +114,7 @@ export default {
       modal: null,
       successfullCaptcha: false,
       position: 0,
+      commentsPerPage: 40,
       maxlength: 110,
       editable: true,
       currentPage: 0,
@@ -142,9 +143,8 @@ export default {
     },
     loadComments() {
       const totalComments = 1000;
-      const commentsPerPage = 5;
 
-      const totalPages = Math.ceil(totalComments / commentsPerPage);
+      const totalPages = Math.ceil(totalComments / this.commentsPerPage);
 
       const comments = [];
 
@@ -160,8 +160,8 @@ export default {
       this.pages = [];
 
       for (let page = 0; page < totalPages; page++) {
-        const startIndex = page * commentsPerPage;
-        const endIndex = startIndex + commentsPerPage;
+        const startIndex = page * this.commentsPerPage;
+        const endIndex = startIndex + this.commentsPerPage;
         this.pages.push(comments.slice(startIndex, endIndex));
       }
       this.currentPage = 0;
@@ -219,7 +219,7 @@ export default {
       this.handleCarouselSlide();
       const lastPage = this.pages.length - 1;
       if (this.successfullCaptcha) {
-        if (this.pages[lastPage].length >= 5) {
+        if (this.pages[lastPage].length >= this.commentsPerPage) {
           this.currentPage++;
           this.pages.push([
             {
