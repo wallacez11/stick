@@ -60,9 +60,7 @@ export default {
       this.currentPosition = evt.current;
       this.totalPages = evt.total;
     });
-    this.emitter.on("captchaDefined", () => {
-      this.disableButton = false;
-    });
+    setTimeout(() => (this.disableButton = false), 3000);
   },
 };
 </script>

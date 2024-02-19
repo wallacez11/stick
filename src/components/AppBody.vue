@@ -55,7 +55,8 @@
               class="sticky-note paper-shadow"
               :class="{
                 unsent: comment.unsent,
-                vibrating: comment.vibrate, // Apply the 'unsent' class if comment.unsent is true
+                vibrating: comment.vibrate,
+                sent: comment.sent, // Apply the 'unsent' class if comment.unsent is true
               }"
             >
               <textarea
@@ -69,6 +70,7 @@
                 data-toggle="tooltip"
                 data-placement="bottom"
                 title="save"
+                @click="saveStickNote(comment.content, comment)"
                 v-show="
                   comment.content.length <= maxlength &&
                   comment.content.length > 0 &&
@@ -133,6 +135,11 @@ export default {
   },
 
   methods: {
+    saveStickNote(content, comment) {
+      console.log("save");
+      comment.readonly = true;
+      comment.sent = true;
+    },
     handleCarouselSlide() {
       const activeItem = document.querySelector(
         ".carousel-inner .carousel-item.active"
@@ -208,6 +215,8 @@ export default {
       }
     },
     handlePostItCreation() {
+      console.log("handlePostItCreation");
+
       const lastPageIndex = this.pages.length - 1;
       const lastPage = this.pages[lastPageIndex];
       const lastElementIndex = lastPage.length - 1;
@@ -220,8 +229,14 @@ export default {
           lastElement.vibrate = false;
         }, 500);
         return false;
+      } else {
+        lastElement.unsent = false;
+        lastElement.vibrate = false;
+        setTimeout(() => {
+          lastElement.sent = false;
+        }, 500);
+        return true;
       }
-      return true;
     },
   },
   beforeUnmount() {
@@ -237,9 +252,6 @@ export default {
     this.$nextTick(() => {
       this.modal = new Modal(this.$refs.exampleModal);
       this.recaptchaComponent = this.$refs.recaptcha;
-      if (this.recaptchaComponent) {
-        this.emitter.emit("captchaDefined");
-      }
     });
     this.emitter.on("createPost", (value) => {
       this.handlePostItCreation();
@@ -247,8 +259,11 @@ export default {
       this.jumpToLastCarousel();
       this.handleCarouselSlide();
       const lastPage = this.pages.length - 1;
+      console.log("createPost");
+
       if (this.successfullCaptcha && this.handlePostItCreation()) {
         if (this.pages[lastPage].length >= this.commentsPerPage) {
+          console.log("createPost if");
           this.currentPage++;
           this.pages.push([
             {
@@ -258,6 +273,7 @@ export default {
             },
           ]);
         } else {
+          console.log("createPost else");
           this.pages[lastPage].push({
             content: "This is a sticky note!",
             color: "#ffff99",
@@ -308,12 +324,16 @@ export default {
 }
 .carousel-control-prev,
 .carousel-control-next {
+  height: 10% !important;
+
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .carousel-control-prev {
+  height: 1% !important;
+
   left: 0;
 }
 .sticky-note.unsent {
@@ -321,6 +341,12 @@ export default {
   border: 2px solid transparent; /* Set the border to transparent to avoid solid red border */
   /* Glow effect */
   box-shadow: 0 0 15px 5px red; /* Adjust the shadow properties as needed */
+}
+.sticky-note.sent {
+  /* Apply styles to visually indicate the unsent state */
+  border: 2px solid transparent; /* Set the border to transparent to avoid solid red border */
+  /* Glow effect */
+  box-shadow: 0 0 15px 5px rgb(14, 228, 42); /* Adjust the shadow properties as needed */
 }
 .carousel-control-next {
   right: 0;
