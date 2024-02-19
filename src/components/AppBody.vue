@@ -116,6 +116,8 @@ export default {
   data() {
     return {
       counter: 0,
+
+      recaptchaComponent: null,
       modal: null,
       successfullCaptcha: false,
       position: 0,
@@ -201,7 +203,7 @@ export default {
     },
     handleCaptchaVerification(value) {
       if (value || !this.successfullCaptcha) {
-        this.$refs.recaptcha.reset();
+        this.recaptchaComponent.reset();
         this.modal.show();
       }
     },
@@ -226,12 +228,19 @@ export default {
     const carousel = document.getElementById("carousel");
     carousel.removeEventListener("slid.bs.carousel", this.handleCarouselSlide);
   },
+
   mounted() {
-    this.modal = new Modal(this.$refs.exampleModal);
     this.carouselListener();
     this.loadComments();
     this.jumpToLastCarousel();
     this.handleCarouselSlide();
+    this.$nextTick(() => {
+      this.modal = new Modal(this.$refs.exampleModal);
+      this.recaptchaComponent = this.$refs.recaptcha;
+      if (this.recaptchaComponent) {
+        this.emitter.emit("captchaDefined");
+      }
+    });
     this.emitter.on("createPost", (value) => {
       this.handlePostItCreation();
       this.handleCaptchaVerification(value);

@@ -12,6 +12,9 @@
         data-placement="bottom"
         title="create"
         class="btn btn-dark rounded-circle button"
+        :class="{
+          disabled: disableButton,
+        }"
         @input="handleInput(index)"
       >
         +
@@ -29,6 +32,7 @@ export default {
   data() {
     return {
       createPostItClickCount: 0,
+      disableButton: true,
       currentPosition: 0,
       totalPages: 0,
       isFirstTime: true,
@@ -55,6 +59,9 @@ export default {
     this.emitter.on("controlValues", (evt) => {
       this.currentPosition = evt.current;
       this.totalPages = evt.total;
+    });
+    this.emitter.on("captchaDefined", () => {
+      this.disableButton = false;
     });
   },
 };
