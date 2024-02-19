@@ -48,11 +48,15 @@
           :class="{ 'carousel-item': true, active: pageIndex === currentPage }"
           class=""
         >
-          <div class="textContainer">
+          <div class="textContainer" ref="textContainer">
             <div
               v-for="(comment, commentIndex) in page"
               :key="commentIndex"
               class="sticky-note paper-shadow"
+              :class="{
+                unsent: comment.unsent,
+                vibrating: comment.vibrate, // Apply the 'unsent' class if comment.unsent is true
+              }"
             >
               <textarea
                 v-model="comment.content"
@@ -101,6 +105,7 @@
 
 <script>
 import { VueRecaptcha } from "vue-recaptcha";
+
 import { Modal } from "bootstrap";
 
 export default {
@@ -134,7 +139,6 @@ export default {
         document.querySelectorAll(".carousel-inner .carousel-item")
       );
       const currentIndex = carouselItems.indexOf(activeItem);
-      console.log(this.pages.length);
 
       this.emitter.emit("controlValues", {
         current: currentIndex + 1,
@@ -201,24 +205,40 @@ export default {
         this.modal.show();
       }
     },
+    handlePostItCreation() {
+      const lastPageIndex = this.pages.length - 1;
+      const lastPage = this.pages[lastPageIndex];
+      const lastElementIndex = lastPage.length - 1;
+      const lastElement = lastPage[lastElementIndex];
+
+      if (lastElement && !lastElement.readonly) {
+        lastElement.unsent = true;
+        lastElement.vibrate = true;
+        setTimeout(() => {
+          lastElement.vibrate = false;
+        }, 500);
+        return false;
+      }
+      return true;
+    },
   },
   beforeUnmount() {
     const carousel = document.getElementById("carousel");
     carousel.removeEventListener("slid.bs.carousel", this.handleCarouselSlide);
   },
   mounted() {
-    console.log("teste", process.env.VUE_APP_CAPTCHA_SITE);
     this.modal = new Modal(this.$refs.exampleModal);
     this.carouselListener();
     this.loadComments();
     this.jumpToLastCarousel();
     this.handleCarouselSlide();
     this.emitter.on("createPost", (value) => {
+      this.handlePostItCreation();
       this.handleCaptchaVerification(value);
       this.jumpToLastCarousel();
       this.handleCarouselSlide();
       const lastPage = this.pages.length - 1;
-      if (this.successfullCaptcha) {
+      if (this.successfullCaptcha && this.handlePostItCreation()) {
         if (this.pages[lastPage].length >= this.commentsPerPage) {
           this.currentPage++;
           this.pages.push([
@@ -255,6 +275,28 @@ export default {
 .carousel-control-next-icon {
   background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23000' viewBox='0 0 8 8'%3E%3Cpath d='M2.75 0l-1.5 1.5 2.5 2.5-2.5 2.5 1.5 1.5 4-4-4-4z'/%3E%3C/svg%3E") !important;
 }
+@keyframes vibrate {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Apply the animation to the sticky note */
+.sticky-note.vibrating {
+  animation: vibrate 0.1s ease-in-out infinite; /* Adjust animation duration and timing function as needed */
+}
 .carousel-control-prev,
 .carousel-control-next {
   position: fixed;
@@ -265,7 +307,12 @@ export default {
 .carousel-control-prev {
   left: 0;
 }
-
+.sticky-note.unsent {
+  /* Apply styles to visually indicate the unsent state */
+  border: 2px solid transparent; /* Set the border to transparent to avoid solid red border */
+  /* Glow effect */
+  box-shadow: 0 0 15px 5px red; /* Adjust the shadow properties as needed */
+}
 .carousel-control-next {
   right: 0;
 }
@@ -281,7 +328,11 @@ export default {
   display: flex;
   flex-wrap: wrap;
 }
+.unsent {
+  border: 2px solid red;
 
+  box-shadow: 0 0 10px 5px red; /* Adjust the shadow properties as needed */
+}
 textarea {
   border: none !important;
   background-color: transparent !important;
